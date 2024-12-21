@@ -1,0 +1,44 @@
+name: Generate Documentation
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'contracts/**'
+      - 'docs/**'
+      - '**.md'
+
+jobs:
+  build-docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Generate Solidity Documentation
+        run: |
+          npm install -g solidity-docgen
+          solidity-docgen --solc-module solc-0.8
+      
+      - name: Generate TypeScript Documentation
+        run: |
+          npm install -g typedoc
+          typedoc --out docs/typescript src/
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs
+          publish_branch: gh-pages
+          full_commit_message: 'docs: update documentation' 
